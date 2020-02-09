@@ -1,0 +1,106 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/CPU.hdl
+
+/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input
+ * holds the value of this location. If the current instruction needs
+ * to write a value to M, the value is placed in outM, the address
+ * of the target location is placed in the addressM output, and the
+ * writeM control bit is asserted. (When writeM==0, any value may
+ * appear in outM). The outM and writeM outputs are combinational:
+ * they are affected instantaneously by the execution of the current
+ * instruction. The addressM and pc outputs are clocked: although they
+ * are affected by the execution of the current instruction, they commit
+ * to their new values only in the next time step. If reset==1 then the
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather
+ * than to the address resulting from executing the current instruction.
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M?
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    // Put your code here:
+
+    // detect instruction type
+      // if compute > address = 0 and compute = 1
+      // if address > address = 1 and compute = 0
+      Not(in=instruction[15], out=address);
+      Not(in=address, out=compute);
+
+    // alu computation
+      // always compute,
+      // though ALUout may or may not be used
+      ALU(x=Dreg, y=AM,
+          zx=instruction[11],
+          nx=instruction[10],
+          zy=instruction[9],
+          ny=instruction[8],
+          f=instruction[7],
+          no=instruction[6],
+          out=ALUout, out=outM,
+          zr=zer, ng=neg);
+
+    // load D register
+      // if compute and d2 then load D
+      And(a=compute, b=instruction[4], out=Dload);
+      DRegister(in=ALUout, load=Dload, out=Dreg);
+
+    // load A register
+      // load A if A-instruction
+      // or if C-instruction AND d1 is true
+      // if compute and d1 then load A with ALU output
+      And(a=compute, b=instruction[5], out=CtoA);
+      // unless address, then send A-instruction instead
+      Mux16(a=instruction, b=ALUout, sel=CtoA, out=Ain);
+      // only load A if either of the above is true
+      Or(a=address, b=CtoA, out=loadA);
+      ARegister(in=Ain, load=loadA, out=Areg);
+
+    // write to M
+      // set address to write to
+      Or16(a=Areg, b=false, out[0..14]=addressM);
+      // if compute and d3 then write to M
+      And(a=compute, b=instruction[3], out=writeM);
+
+    // ALU y input
+      // if a=0 choose Areg
+      // otherwise, choose inM
+      Mux16(a=Areg, b=inM, sel=instruction[12], out=AM);
+
+    // navigate around instructions with PC
+      // in=instruction[0..2]
+      // out=wrtieM
+      // out=pcLoad as bool
+      // test ALUout relation to 0 and jump if true
+      Or(a=zer, b=neg, out=lteZ);
+      Not(in=lteZ, out=pos);
+      And(a=instruction[0], b=pos, out=JGT);
+      And(a=instruction[1], b=zer, out=JEQ);
+      And(a=instruction[2], b=neg, out=JLT);
+      Or(a=JGT, b=JEQ, out=jge);
+      Or(a=jge, b=JLT, out=jump);
+      // if compute and jump then load pc with jump address
+      And(a=compute, b=jump, out=PCload);
+      PC(in=Areg, load=PCload, inc=true, reset=reset, out[0..14]=pc);
+
+}

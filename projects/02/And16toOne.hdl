@@ -1,0 +1,31 @@
+// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/And16toOne.hdl
+
+/**
+ * Reduce 16 bit word to 1 bit with And
+ */
+
+CHIP And16toOne {
+    IN a[16];
+    OUT z0;
+
+    PARTS:
+    // Put your code here:
+    And(a=a[0], b=a[1], out=z14);
+    And(a=z14, b=a[2], out=z13);
+    And(a=z13, b=a[3], out=z12);
+    And(a=z12, b=a[4], out=z11);
+    And(a=z11, b=a[5], out=z10);
+    And(a=z10, b=a[6], out=z9);
+    And(a=z9, b=a[7], out=z8);
+    And(a=z8, b=a[8], out=z7);
+    And(a=z7, b=a[9], out=z6);
+    And(a=z6, b=a[10], out=z5);
+    And(a=z5, b=a[11], out=z4);
+    And(a=z4, b=a[12], out=z3);
+    And(a=z3, b=a[13], out=z2);
+    And(a=z2, b=a[14], out=z1);
+    And(a=z1, b=a[15], out=z0);
+}
