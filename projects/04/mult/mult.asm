@@ -10,7 +10,7 @@
 
   // create a sum counter
   @i    // reserve memory for i
-  M=1   // set i=0
+  M=1   // set i=1
 
   @R2   // point A to R2's location
   M=0   // set R2 to 0
@@ -20,7 +20,7 @@
   @i    // grab i
   D=M   // store i in D register
   @R1   // get R1
-  D=D-M // D=R1-i
+  D=D-M // D=i-R1
   @END  // point A to end of loop
   D;JGT // if D > 0, goto end of loop
   @R0   // point A at R1
