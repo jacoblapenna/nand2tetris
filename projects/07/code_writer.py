@@ -61,15 +61,16 @@ class CodeWriter:
 
         # create locals
         segment = cmd_arr[1] # segment argument
-        indx = cmd_arr[2] # index (i) argument
+        indx = int(cmd_arr[2]) # index (i) argument
         comment_cmd = ' '.join(cmd_arr) # assembly comment string
+        # initialize assembly string with comment for code block
+        ass_str = f'// {comment_cmd}\n'
 
-        # determine segment and handle accordingly
-        if segment == 'constant': # if constant
-            # create comment for code block
-            ass_str = f'// {comment_cmd}\n'
-            # put integer value in D register
-            ass_str += f'@{indx}\nD=A\n'
+        def push_and_write(ass_str):
+            """
+            helper function for repetitive aspect of push
+            assembly string construction
+            """
             # push to present stack position as follows:
             # @SP => A=addr 0, which contains address of stack's top
             # A=M => A=addr of stack's top
@@ -80,8 +81,150 @@ class CodeWriter:
             # write code block to output
             self.__write(ass_str)
 
-    def c_pop(self, segment, indx):
-        print('Pop:', segment, indx)
+        # determine segment and handle accordingly
+        if segment == 'constant': # if constant
+            # put integer value in D register
+            ass_str += f'@{indx}\nD=A\n'
+            # push to top of stack and write to output
+            push_and_write(ass_str)
+
+        elif segment == 'local': # if local
+            # put value contained at LCL+indx into D
+            ass_str += f'@{indx}\nD=A\n@LCL\nA=D+M\nD=M\n'
+            # push to top of stack and write to ouput
+            push_and_write(ass_str)
+
+        elif segment == 'argument':
+            # put value contained at ARG+indx into D
+            ass_str += f'@{indx}\nD=A\n@ARG\nA=D+M\nD=M\n'
+            # push to top of stack and write to ouput
+            push_and_write(ass_str)
+
+        elif segment == 'this':
+            # put value contained at THIS+indx into D
+            ass_str += f'@{indx}\nD=A\n@THIS\nA=D+M\nD=M\n'
+            # push to top of stack and write to ouput
+            push_and_write(ass_str)
+
+        elif segment == 'that':
+            # put value contained at THIS+indx into D
+            ass_str += f'@{indx}\nD=A\n@THAT\nA=D+M\nD=M\n'
+            # push to top of stack and write to ouput
+            push_and_write(ass_str)
+
+        elif segment == 'static':
+            # memory allocation from RAM[16] to RAM[255]
+            if 0 <= indx <= 239:
+                # set absolute address index
+                indx += 16
+                # put value contained at indx into D
+                ass_str += f'@{indx}\nD=M\n'
+                # push to top of stack and write to ouput
+                push_and_write(ass_str)
+
+        elif segment == 'temp':
+            # memory allocation from RAM[5] to RAM[12]
+            if 0 <= indx <= 7:
+                # set absolute address index
+                indx += 5
+                # put value contained at indx into D
+                ass_str += f'@{indx}\nD=M\n'
+                # push to top of stack and write to ouput
+                push_and_write(ass_str)
+
+        elif segment == 'pointer':
+            # indx can only be 0 or 1
+            if indx == 0:
+                # push THIS
+                ass_str += f'@THIS\nD=M\n' # might need to be D=A, unclear whether specification requires address or value at address
+            elif indx == 1:
+                # push THAT
+                ass_str += f'@THAT\nD=M\n' # again, might need D=A
+            # push to top of stack and write to ouput
+            push_and_write(ass_str)
+
+    def c_pop(self, cmd_arr):
+        """ build pop assembly string """
+
+        # create locals
+        segment = cmd_arr[1] # segment argument
+        indx = int(cmd_arr[2]) # index (i) argument
+        comment_cmd = ' '.join(cmd_arr) # assembly comment string
+        # initialize assembly string with comment for code block
+        ass_str = f'// {comment_cmd}\n'
+
+        def pop_and_write(ass_str):
+            """
+            helper function for repetitive aspect of pop
+            assembly string construction
+            """
+            # pop from last stack position as follows:
+            # @SP   => A=addr 0, which contains address of stack's top
+            # M=M-1 => decrement stack address to get last location
+            # A=M   => store last occupied stack address in A
+            # D=M   => store tha value at the last occupied stack address in D
+            # @R13  => set A address where popping address is stored
+            # A=M   => set A to popping address
+            # M=D   => put value in D into popping address's location
+            ass_str += '@SP\nM=M-1\nA=M\nD=M\n@R13\nA=M\nM=D\n'
+            # write code block to output
+            self.__write(ass_str)
+
+        # determine segment and handle accordingly
+        if segment == 'local':
+            # put LCL+indx address into R13
+            ass_str += f'@{indx}\nD=A\n@LCL\nA=D+M\nD=A\n@R13\nM=D\n'
+            # pop from stack and write to ouput
+            pop_and_write(ass_str)
+
+        elif segment == 'argument':
+            # put ARG+indx address into R13
+            ass_str += f'@{indx}\nD=A\n@ARG\nA=D+M\nD=A\n@R13\nM=D\n'
+            # pop from stack and write to ouput
+            pop_and_write(ass_str)
+
+        elif segment == 'this':
+            # put THIS+indx address into R13
+            ass_str += f'@{indx}\nD=A\n@THIS\nA=D+M\nD=A\n@R13\nM=D\n'
+            # pop from stack and write to ouput
+            pop_and_write(ass_str)
+
+        elif segment == 'that':
+            # put LCL+indx address into R13
+            ass_str += f'@{indx}\nD=A\n@THAT\nA=D+M\nD=A\n@R13\nM=D\n'
+            # pop from stack and write to ouput
+            pop_and_write(ass_str)
+
+        elif segment == 'static':
+            # memory allocation from RAM[16] to RAM[255]
+            if 0 <= indx <= 239:
+                # set absolute address index
+                indx += 16
+                # put 16+indx address into R13
+                ass_str += f'@{indx}\nD=A\n@R13\nM=D\n'
+                # push to top of stack and write to ouput
+                pop_and_write(ass_str)
+
+        elif segment == 'temp':
+            # memory allocation from RAM[5] to RAM[12]
+            if 0 <= indx <= 7:
+                # set absolute address index
+                indx += 5
+                # put 5+indx address into R13
+                ass_str += f'@{indx}\nD=A\n@R13\nM=D\n'
+                # push to top of stack and write to ouput
+                pop_and_write(ass_str)
+
+        elif segment == 'pointer':
+            # indx can only be 0 or 1
+            if indx == 0:
+                # store THIS address into R13
+                ass_str += f'@THIS\nD=A\n@R13\nM=D\n'
+            elif indx == 1:
+                # store THAT address into R13
+                ass_str += f'@THAT\nD=A\n@R13\nM=D\n'
+            # push to top of stack and write to ouput
+            pop_and_write(ass_str)
 
     def c_arithmetic(self, cmd):
         """ build arithmetic assembly string """
