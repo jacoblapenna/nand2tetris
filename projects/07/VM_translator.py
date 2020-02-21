@@ -4,9 +4,6 @@ from code_writer import CodeWriter
 import sys
 import os
 
-input = sys.argv[1]
-output = sys.argv[2]
-
 def get_all_VM_files(directory):
 
     files = []
@@ -19,15 +16,37 @@ def get_all_VM_files(directory):
 
     return files
 
+def example_usage(error_str):
+    print(f"Error: {error_str}!")
+    print("Example usage:")
+    print("    ./VM_translator.py input_file.vm output_filename")
+    print("    ./VM_translator.py input_directory output_filename")
+    sys.exit(1)
+
+try:
+    input = sys.argv[1]
+    output = sys.argv[2]
+except IndexError:
+    example_usage('improper arguments')
+
 if '.vm' in input:
-    vm_files = [input]
+    if input in os.listdir():
+        vm_files = [input]
+    else:
+        example_usage('file not found')
 else:
     if input in os.getcwd():
         vm_files = get_all_VM_files(os.getcwd())
+        if len(vm_files) == 0:
+            example_usage('no vm files found')
     else:
-        os.chdir(input)
-        vm_files = get_all_VM_files(os.getcwd())
-
+        try:
+            os.chdir(input)
+            vm_files = get_all_VM_files(os.getcwd())
+            if len(vm_files) == 0:
+                example_usage('no vm files in specified directory')
+        except FileNotFoundError:
+            example_usage('no such directory')
 
 # create a CodeWriter instance
 cw = CodeWriter(vm_files, output)
@@ -37,58 +56,3 @@ cw.translate()
 
 # close the output of the CodeWriter
 cw.close()
-
-"""
-try: # try to grab input argument
-
-    arg = sys.argv[1]
-
-except IndexError: # unless error
-
-    # print example usage
-    print('Script call takes one argument, either file or directory:')
-    print()
-    print('Example usage:')
-    print('./VM_translator.py input_file.vm')
-    print('./VM_translator.py input_directory')
-    print()
-
-    # exit script cleanly
-    sys.exit(1)
-
-def get_all_VM_files(directory):
-
-    cwd = os.getcwd()
-    vm_files = []
-
-    if directory in cwd:
-    # if we're in the directory already
-
-        for file in os.listdir(cwd):
-        # iterate through each file in cwd
-
-            if '.vm' in file: # if file is a vm file
-
-                # store filename in array
-                vm_files.append(file)
-
-        return vm_files
-
-    else: # otherwise
-
-        # try changing directories
-        # exception handling is in main program should this fail
-        os.chdir(directory)
-        # then get all vm files
-        return get_all_VM_files(directory)
-
-try: # try to see if argument is a directory
-
-    vm_files = get_all_VM_files(arg)
-
-except NotADirectoryError: # if it's not a directory
-
-    # see if its a file
-    if os.path.isfile(arg):
-        vm_files = [arg]
-"""
