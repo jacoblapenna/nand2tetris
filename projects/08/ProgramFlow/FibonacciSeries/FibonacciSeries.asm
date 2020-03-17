@@ -1,284 +1,284 @@
 // push argument 1
-@1
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@1                                      // 0
+D=A                                     // 1
+@ARG                                    // 2
+A=D+M                                   // 3
+D=M                                     // 4
+@SP                                     // 5
+A=M                                     // 6
+M=D                                     // 7
+@SP                                     // 8
+M=M+1                                   // 9
 // pop pointer 1
-@THAT
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@THAT                                   // 10
+D=A                                     // 11
+@R13                                    // 12
+M=D                                     // 13
+@SP                                     // 14
+M=M-1                                   // 15
+A=M                                     // 16
+D=M                                     // 17
+@R13                                    // 18
+A=M                                     // 19
+M=D                                     // 20
 // push constant 0
-@0
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 21
+D=A                                     // 22
+@SP                                     // 23
+A=M                                     // 24
+M=D                                     // 25
+@SP                                     // 26
+M=M+1                                   // 27
 // pop that 0
-@0
-D=A
-@THAT
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@0                                      // 28
+D=A                                     // 29
+@THAT                                   // 30
+A=D+M                                   // 31
+D=A                                     // 32
+@R13                                    // 33
+M=D                                     // 34
+@SP                                     // 35
+M=M-1                                   // 36
+A=M                                     // 37
+D=M                                     // 38
+@R13                                    // 39
+A=M                                     // 40
+M=D                                     // 41
 // push constant 1
-@1
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@1                                      // 42
+D=A                                     // 43
+@SP                                     // 44
+A=M                                     // 45
+M=D                                     // 46
+@SP                                     // 47
+M=M+1                                   // 48
 // pop that 1
-@1
-D=A
-@THAT
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@1                                      // 49
+D=A                                     // 50
+@THAT                                   // 51
+A=D+M                                   // 52
+D=A                                     // 53
+@R13                                    // 54
+M=D                                     // 55
+@SP                                     // 56
+M=M-1                                   // 57
+A=M                                     // 58
+D=M                                     // 59
+@R13                                    // 60
+A=M                                     // 61
+M=D                                     // 62
 // push argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 63
+D=A                                     // 64
+@ARG                                    // 65
+A=D+M                                   // 66
+D=M                                     // 67
+@SP                                     // 68
+A=M                                     // 69
+M=D                                     // 70
+@SP                                     // 71
+M=M+1                                   // 72
 // push constant 2
-@2
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@2                                      // 73
+D=A                                     // 74
+@SP                                     // 75
+A=M                                     // 76
+M=D                                     // 77
+@SP                                     // 78
+M=M+1                                   // 79
 // sub
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M-D
-@SP
-M=M+1
+@SP                                     // 80
+M=M-1                                   // 81
+@SP                                     // 82
+A=M                                     // 83
+D=M                                     // 84
+@SP                                     // 85
+M=M-1                                   // 86
+@SP                                     // 87
+A=M                                     // 88
+M=M-D                                   // 89
+@SP                                     // 90
+M=M+1                                   // 91
 // pop argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@0                                      // 92
+D=A                                     // 93
+@ARG                                    // 94
+A=D+M                                   // 95
+D=A                                     // 96
+@R13                                    // 97
+M=D                                     // 98
+@SP                                     // 99
+M=M-1                                   // 100
+A=M                                     // 101
+D=M                                     // 102
+@R13                                    // 103
+A=M                                     // 104
+M=D                                     // 105
 // label main_loop_start
 (main_loop_start)
 // push argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 106
+D=A                                     // 107
+@ARG                                    // 108
+A=D+M                                   // 109
+D=M                                     // 110
+@SP                                     // 111
+A=M                                     // 112
+M=D                                     // 113
+@SP                                     // 114
+M=M+1                                   // 115
 // if-goto compute_element
-@SP
-M=M-1
-A=M
-D=M
-@compute_element
-D;JGT
+@SP                                     // 116
+M=M-1                                   // 117
+A=M                                     // 118
+D=M                                     // 119
+@compute_element                        // 120
+D;JNE                                   // 121
 // goto end_program
-@end_program
-0;JMP
+@end_program                            // 122
+0;JMP                                   // 123
 // label compute_element
 (compute_element)
 // push that 0
-@0
-D=A
-@THAT
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 124
+D=A                                     // 125
+@THAT                                   // 126
+A=D+M                                   // 127
+D=M                                     // 128
+@SP                                     // 129
+A=M                                     // 130
+M=D                                     // 131
+@SP                                     // 132
+M=M+1                                   // 133
 // push that 1
-@1
-D=A
-@THAT
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@1                                      // 134
+D=A                                     // 135
+@THAT                                   // 136
+A=D+M                                   // 137
+D=M                                     // 138
+@SP                                     // 139
+A=M                                     // 140
+M=D                                     // 141
+@SP                                     // 142
+M=M+1                                   // 143
 // add
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M+D
-@SP
-M=M+1
+@SP                                     // 144
+M=M-1                                   // 145
+@SP                                     // 146
+A=M                                     // 147
+D=M                                     // 148
+@SP                                     // 149
+M=M-1                                   // 150
+@SP                                     // 151
+A=M                                     // 152
+M=M+D                                   // 153
+@SP                                     // 154
+M=M+1                                   // 155
 // pop that 2
-@2
-D=A
-@THAT
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@2                                      // 156
+D=A                                     // 157
+@THAT                                   // 158
+A=D+M                                   // 159
+D=A                                     // 160
+@R13                                    // 161
+M=D                                     // 162
+@SP                                     // 163
+M=M-1                                   // 164
+A=M                                     // 165
+D=M                                     // 166
+@R13                                    // 167
+A=M                                     // 168
+M=D                                     // 169
 // push pointer 1
-@THAT
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@THAT                                   // 170
+D=M                                     // 171
+@SP                                     // 172
+A=M                                     // 173
+M=D                                     // 174
+@SP                                     // 175
+M=M+1                                   // 176
 // push constant 1
-@1
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@1                                      // 177
+D=A                                     // 178
+@SP                                     // 179
+A=M                                     // 180
+M=D                                     // 181
+@SP                                     // 182
+M=M+1                                   // 183
 // add
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M+D
-@SP
-M=M+1
+@SP                                     // 184
+M=M-1                                   // 185
+@SP                                     // 186
+A=M                                     // 187
+D=M                                     // 188
+@SP                                     // 189
+M=M-1                                   // 190
+@SP                                     // 191
+A=M                                     // 192
+M=M+D                                   // 193
+@SP                                     // 194
+M=M+1                                   // 195
 // pop pointer 1
-@THAT
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@THAT                                   // 196
+D=A                                     // 197
+@R13                                    // 198
+M=D                                     // 199
+@SP                                     // 200
+M=M-1                                   // 201
+A=M                                     // 202
+D=M                                     // 203
+@R13                                    // 204
+A=M                                     // 205
+M=D                                     // 206
 // push argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 207
+D=A                                     // 208
+@ARG                                    // 209
+A=D+M                                   // 210
+D=M                                     // 211
+@SP                                     // 212
+A=M                                     // 213
+M=D                                     // 214
+@SP                                     // 215
+M=M+1                                   // 216
 // push constant 1
-@1
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@1                                      // 217
+D=A                                     // 218
+@SP                                     // 219
+A=M                                     // 220
+M=D                                     // 221
+@SP                                     // 222
+M=M+1                                   // 223
 // sub
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M-D
-@SP
-M=M+1
+@SP                                     // 224
+M=M-1                                   // 225
+@SP                                     // 226
+A=M                                     // 227
+D=M                                     // 228
+@SP                                     // 229
+M=M-1                                   // 230
+@SP                                     // 231
+A=M                                     // 232
+M=M-D                                   // 233
+@SP                                     // 234
+M=M+1                                   // 235
 // pop argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@0                                      // 236
+D=A                                     // 237
+@ARG                                    // 238
+A=D+M                                   // 239
+D=A                                     // 240
+@R13                                    // 241
+M=D                                     // 242
+@SP                                     // 243
+M=M-1                                   // 244
+A=M                                     // 245
+D=M                                     // 246
+@R13                                    // 247
+A=M                                     // 248
+M=D                                     // 249
 // goto main_loop_start
-@main_loop_start
-0;JMP
+@main_loop_start                        // 250
+0;JMP                                   // 251
 // label end_program
 (end_program)

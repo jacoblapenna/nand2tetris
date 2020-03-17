@@ -1,151 +1,151 @@
 // push constant 0
-@0
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 0
+D=A                                     // 1
+@SP                                     // 2
+A=M                                     // 3
+M=D                                     // 4
+@SP                                     // 5
+M=M+1                                   // 6
 // pop local 0
-@0
-D=A
-@LCL
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@0                                      // 7
+D=A                                     // 8
+@LCL                                    // 9
+A=D+M                                   // 10
+D=A                                     // 11
+@R13                                    // 12
+M=D                                     // 13
+@SP                                     // 14
+M=M-1                                   // 15
+A=M                                     // 16
+D=M                                     // 17
+@R13                                    // 18
+A=M                                     // 19
+M=D                                     // 20
 // label loop_start
 (loop_start)
 // push argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 21
+D=A                                     // 22
+@ARG                                    // 23
+A=D+M                                   // 24
+D=M                                     // 25
+@SP                                     // 26
+A=M                                     // 27
+M=D                                     // 28
+@SP                                     // 29
+M=M+1                                   // 30
 // push local 0
-@0
-D=A
-@LCL
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 31
+D=A                                     // 32
+@LCL                                    // 33
+A=D+M                                   // 34
+D=M                                     // 35
+@SP                                     // 36
+A=M                                     // 37
+M=D                                     // 38
+@SP                                     // 39
+M=M+1                                   // 40
 // add
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M+D
-@SP
-M=M+1
+@SP                                     // 41
+M=M-1                                   // 42
+@SP                                     // 43
+A=M                                     // 44
+D=M                                     // 45
+@SP                                     // 46
+M=M-1                                   // 47
+@SP                                     // 48
+A=M                                     // 49
+M=M+D                                   // 50
+@SP                                     // 51
+M=M+1                                   // 52
 // pop local 0
-@0
-D=A
-@LCL
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@0                                      // 53
+D=A                                     // 54
+@LCL                                    // 55
+A=D+M                                   // 56
+D=A                                     // 57
+@R13                                    // 58
+M=D                                     // 59
+@SP                                     // 60
+M=M-1                                   // 61
+A=M                                     // 62
+D=M                                     // 63
+@R13                                    // 64
+A=M                                     // 65
+M=D                                     // 66
 // push argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 67
+D=A                                     // 68
+@ARG                                    // 69
+A=D+M                                   // 70
+D=M                                     // 71
+@SP                                     // 72
+A=M                                     // 73
+M=D                                     // 74
+@SP                                     // 75
+M=M+1                                   // 76
 // push constant 1
-@1
-D=A
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@1                                      // 77
+D=A                                     // 78
+@SP                                     // 79
+A=M                                     // 80
+M=D                                     // 81
+@SP                                     // 82
+M=M+1                                   // 83
 // sub
-@SP
-M=M-1
-@SP
-A=M
-D=M
-@SP
-M=M-1
-@SP
-A=M
-M=M-D
-@SP
-M=M+1
+@SP                                     // 84
+M=M-1                                   // 85
+@SP                                     // 86
+A=M                                     // 87
+D=M                                     // 88
+@SP                                     // 89
+M=M-1                                   // 90
+@SP                                     // 91
+A=M                                     // 92
+M=M-D                                   // 93
+@SP                                     // 94
+M=M+1                                   // 95
 // pop argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=A
-@R13
-M=D
-@SP
-M=M-1
-A=M
-D=M
-@R13
-A=M
-M=D
+@0                                      // 96
+D=A                                     // 97
+@ARG                                    // 98
+A=D+M                                   // 99
+D=A                                     // 100
+@R13                                    // 101
+M=D                                     // 102
+@SP                                     // 103
+M=M-1                                   // 104
+A=M                                     // 105
+D=M                                     // 106
+@R13                                    // 107
+A=M                                     // 108
+M=D                                     // 109
 // push argument 0
-@0
-D=A
-@ARG
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 110
+D=A                                     // 111
+@ARG                                    // 112
+A=D+M                                   // 113
+D=M                                     // 114
+@SP                                     // 115
+A=M                                     // 116
+M=D                                     // 117
+@SP                                     // 118
+M=M+1                                   // 119
 // if-goto loop_start
-@SP
-M=M-1
-A=M
-D=M
-@loop_start
-D;JGT
+@SP                                     // 120
+M=M-1                                   // 121
+A=M                                     // 122
+D=M                                     // 123
+@loop_start                             // 124
+D;JNE                                   // 125
 // push local 0
-@0
-D=A
-@LCL
-A=D+M
-D=M
-@SP
-A=M
-M=D
-@SP
-M=M+1
+@0                                      // 126
+D=A                                     // 127
+@LCL                                    // 128
+A=D+M                                   // 129
+D=M                                     // 130
+@SP                                     // 131
+A=M                                     // 132
+M=D                                     // 133
+@SP                                     // 134
+M=M+1                                   // 135

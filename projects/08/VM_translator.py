@@ -19,13 +19,14 @@ def get_all_VM_files(directory):
 def example_usage(error_str):
     print(f"Error: {error_str}!")
     print("Example usage:")
-    print("    ./VM_translator.py input_file.vm output_filename")
-    print("    ./VM_translator.py input_directory output_filename")
+    print("    ./VM_translator.py input_file.vm output_filename boot_bool(0 or 1)")
+    print("    ./VM_translator.py input_directory output_filename boot_bool(0 or 1)")
     sys.exit(1)
 
 try:
     input = sys.argv[1]
     output = sys.argv[2]
+    boot = int(sys.argv[3])
 except IndexError:
     example_usage('improper arguments')
 
@@ -49,7 +50,7 @@ else:
             example_usage('no such directory')
 
 # create a CodeWriter instance
-cw = CodeWriter(vm_files, output)
+cw = CodeWriter(vm_files, output, boot)
 
 # perform translation
 cw.translate()

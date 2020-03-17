@@ -4,16 +4,19 @@ from parser import Parser
 
 class CodeWriter:
 
-    def __init__(self, input_file_lst, output_file):
+    def __init__(self, input_file_lst, output_file, boot=True):
         """ initialize an instance of CodeWriter """
         # set static variables
         self.filename = output_file + '.asm'
         self.file_stream = open(self.filename, 'w+')
         self.input_lst = input_file_lst
         self.label_id = 0
+        self.call_cnt = 0
+        self.line_number = 0
 
-        # VM initialization (bootstrap code)
-        self.bootstrap()
+        if boot:
+            # VM initialization (bootstrap code)
+            self.bootstrap()
 
 #-------------------------------------------------------------------------------
 
@@ -25,6 +28,19 @@ class CodeWriter:
 
     def __write(self, code_block):
         """ write a code block to ouput """
+
+        def add_line_numbering(code_block):
+            lines = code_block.split('\n')
+            for n, line in enumerate(lines):
+                if line:
+                    if line[0] != "(" and line[0] != "/":
+                        length = len(line)
+                        lines[n] = line + f"{''.join([' ' for i in range(int(40 - length))])}// {self.line_number}"
+                        self.line_number += 1
+            return '\n'.join(lines)
+
+        code_block = add_line_numbering(code_block)
+
         self.file_stream.write(code_block)
 
 #-------------------------------------------------------------------------------
@@ -46,7 +62,19 @@ class CodeWriter:
 
     def bootstrap(self):
         """ allocate memory for virtual machine and initialize """
-        pass
+
+        # initialize assembly string with comment for code block
+        ass_str = f'// this is the bootstrap code block\n'
+
+        # initialize SP to point to RAM[256]
+        ass_str += '@256\n'
+        ass_str += 'D=A\n'
+        ass_str += '@SP\n'
+        ass_str += 'M=D\n'
+        self.__write(ass_str)
+
+        # call Sys.init() function as present
+        self.c_call(['call', 'sys.init', '0'], comment=False)
 
 #-------------------------------------------------------------------------------
 
@@ -67,7 +95,7 @@ class CodeWriter:
         elif c_type == 'C_FUNCTION':
             self.c_function(cmd[0:-1])
         elif c_type == 'C_RETURN':
-            self.c_return(cmd[0:-1])
+            self.c_return()
         elif c_type == 'C_CALL':
             self.c_call(cmd[0:-1])
         else:
@@ -75,15 +103,18 @@ class CodeWriter:
 
 #-------------------------------------------------------------------------------
 
-    def c_push(self, cmd_arr):
+    def c_push(self, cmd_arr, comment=True):
         """ build push assembly string """
 
         # create locals
         segment = cmd_arr[1] # segment argument
         indx = int(cmd_arr[2]) # index (i) argument
-        comment_cmd = ' '.join(cmd_arr) # assembly comment string
-        # initialize assembly string with comment for code block
-        ass_str = f'// {comment_cmd}\n'
+        if comment:
+            comment_cmd = ' '.join(cmd_arr) # assembly comment string
+            # initialize assembly string with comment for code block
+            ass_str = f'// {comment_cmd}\n'
+        else:
+            ass_str = ''
 
         def push_and_write(ass_str):
             """
@@ -164,15 +195,18 @@ class CodeWriter:
 
 #-------------------------------------------------------------------------------
 
-    def c_pop(self, cmd_arr):
+    def c_pop(self, cmd_arr, comment=True):
         """ build pop assembly string """
 
         # create locals
         segment = cmd_arr[1] # segment argument
         indx = int(cmd_arr[2]) # index (i) argument
-        comment_cmd = ' '.join(cmd_arr) # assembly comment string
-        # initialize assembly string with comment for code block
-        ass_str = f'// {comment_cmd}\n'
+        if comment:
+            comment_cmd = ' '.join(cmd_arr) # assembly comment string
+            # initialize assembly string with comment for code block
+            ass_str = f'// {comment_cmd}\n'
+        else:
+            ass_str = ''
 
         def pop_and_write(ass_str):
             """
@@ -447,7 +481,7 @@ class CodeWriter:
             # decrement stack address
             ass_str += '@SP\nM=M-1\n'
             # set D to value at stack pointer (D=y)
-            ass_str += '@SP\nA=M\nD=M\n'
+            ass_str += '@SP\nA=M\nD=M\n' # REPLACE WITH JUST D=M
             # decrement stack address
             ass_str += '@SP\nM=M-1\n'
             # get value at top of stack and perform operation (x|y)
@@ -473,14 +507,17 @@ class CodeWriter:
 
 #-------------------------------------------------------------------------------
 
-    def c_label(self, cmd_arr):
+    def c_label(self, cmd_arr, comment=True):
         """ build label assembly string """
 
         # create locals
         label = cmd_arr[1]
-        comment_cmd = ' '.join(cmd_arr) # assembly comment string
-        # initialize assembly string with comment for code block
-        ass_str = f'// {comment_cmd}\n'
+        if comment:
+            comment_cmd = ' '.join(cmd_arr) # assembly comment string
+            # initialize assembly string with comment for code block
+            ass_str = f'// {comment_cmd}\n'
+        else:
+            ass_str = ''
 
         # create assembly string with label
         ass_str += f'({label})\n'
@@ -489,14 +526,17 @@ class CodeWriter:
 
 #-------------------------------------------------------------------------------
 
-    def c_goto(self, cmd_arr):
+    def c_goto(self, cmd_arr, comment=True):
         """ build goto assembly string """
 
         # create locals
         label = cmd_arr[1]
-        comment_cmd = ' '.join(cmd_arr) # assembly comment string
-        # initialize assembly string with comment for code block
-        ass_str = f'// {comment_cmd}\n'
+        if comment:
+            comment_cmd = ' '.join(cmd_arr) # assembly comment string
+            # initialize assembly string with comment for code block
+            ass_str = f'// {comment_cmd}\n'
+        else:
+            ass_str = ''
 
         # address instruction of jump location
         ass_str += f'@{label}\n'
@@ -520,24 +560,109 @@ class CodeWriter:
         ass_str += 'A=M\nD=M\n' # set D to last value in stack
         # if last stack value is true goto jump location
         ass_str += f'@{label}\n'
-        ass_str += 'D;JGT\n'
+        ass_str += 'D;JNE\n'
         # write code block to output
         self.__write(ass_str)
 
 #-------------------------------------------------------------------------------
 
-    def c_function(self):
+    def c_function(self, cmd_arr):
         """ build function assembly string """
-        pass
+
+        # create function label to address code block
+        self.c_label(cmd_arr)
+
+        # push locals, if any, on stack
+        # NOTE: Figure 8.4 shows LCL pointing to local 0,
+        # therefore push constant not push local.
+        for i in range(int(cmd_arr[2])):
+            self.c_push(['push', 'constant', '0'], comment=False)
 
 #-------------------------------------------------------------------------------
 
-    def c_call(self):
+    def c_call(self, cmd_arr, comment=True):
         """ build call assembly string """
-        pass
+        # We're setting up the stack before entering into the
+        # functions code block. We assume all relevant arguments
+        # have already been pushed on the stack. See fig 8.5.
+
+        # create locals
+        if comment:
+            comment_cmd = ' '.join(cmd_arr) # assembly comment string
+            # initialize assembly string with comment for code block
+            ass_str = f'// {comment_cmd}\n'
+        else:
+            ass_str = ''
+
+        def push_pointer(pointer):
+            return f'@{pointer}\nD=M\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+
+        # push return address on stack
+        ret_label = f'{cmd_arr[1]}.return_{str(self.call_cnt)}'
+        ass_str += f'@{ret_label}\nD=A\n@SP\nA=M\nM=D\n@SP\nM=M+1\n'
+        #self.__write(ass_str)
+        # push LCL pointer to stack
+        ass_str += push_pointer('LCL')
+        # push ARG pointer to stack
+        ass_str += push_pointer('ARG')
+        # push THIS pointer to stack
+        ass_str += push_pointer('THIS')
+        # push THAT pointer to stack
+        ass_str += push_pointer('THAT')
+
+        # reposition ARG to first related argumnet pushed on stack
+        # (i.e. ARG_address = SP - (5 + n))
+        ass_str += '@SP\nD=M\n@5\nD=D-A\n'
+        ass_str += f'@{int(cmd_arr[2])}\nD=D-A\n@ARG\nM=D\n'
+
+        # position LCL at current stack position
+        ass_str += '@SP\nD=M\n@LCL\nM=D\n'
+        # write code block to output
+        self.__write(ass_str)
+
+        # goto function block
+        self.c_goto(['goto', cmd_arr[1]], comment=False)
+
+        # build return address label
+        self.c_label(['label', ret_label], comment=False)
+
+        # increment call count
+        self.call_cnt += 1
 
 #-------------------------------------------------------------------------------
 
     def c_return(self):
         """ build return assembly string """
-        pass
+        # get last value on stack and bring up to entry point.
+        # the entry point is held by ARG at argument 0.
+        # reposition SP to just after the entry point and restore
+        # key pointers values of caller. Finally, goto return address
+
+        # create locals
+        comment_cmd = 'return' # assembly comment string
+        # initialize assembly string with comment for code block
+        ass_str = f'// {comment_cmd}\n'
+
+        def pop_pointer(pointer):
+            return f'@LCL\nM=M-1\n@LCL\nA=M\nD=M\n@{pointer}\nM=D\n'
+
+        # get return address created on call
+        ass_str += '@5\nD=A\n@LCL\nD=M-D\nA=D\nD=M\n@R14\nM=D\n'
+        self.__write(ass_str)
+        # set value at ARG to return value (pop last stack value to ARG)
+        self.c_pop(['pop', 'argument', '0'], comment=False)
+        # reposition stack pointer
+        ass_str = '@ARG\nD=M+1\n@SP\nM=D\n'
+        # restore caller stack's pointers
+        # restore THAT
+        ass_str += pop_pointer('THAT')
+        # retore THIS
+        ass_str += pop_pointer('THIS')
+        # retore ARG
+        ass_str += pop_pointer('ARG')
+        # restore LCL
+        ass_str += pop_pointer('LCL')
+        # goto return address
+        ass_str += '@R14\nA=M\n0;JMP\n'
+        # write to output file
+        self.__write(ass_str)
