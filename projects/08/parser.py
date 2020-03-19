@@ -55,4 +55,4 @@ class Parser:
             # append command type
             cmd_arr.append(self.__cmd_switch(cmd_arr[0]))
             # return command array information
-            return cmd_arr
+            return cmd_arr, self.filename

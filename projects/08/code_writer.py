@@ -14,6 +14,12 @@ class CodeWriter:
         self.call_cnt = 0
         self.line_number = 0
 
+        # initialize hack's static memory map
+        self.static_indx = 0
+        self.static_mem_map = {}
+        for file in self.input_lst:
+            self.static_mem_map[file] = {}
+
         if boot:
             # VM initialization (bootstrap code)
             self.bootstrap()
@@ -35,7 +41,10 @@ class CodeWriter:
                 if line:
                     if line[0] != "(" and line[0] != "/":
                         length = len(line)
-                        lines[n] = line + f"{''.join([' ' for i in range(int(40 - length))])}// {self.line_number}"
+                        # add instruction number as comment
+                        lines[n] = line + \
+                            f"{''.join([' ' for i in range(int(40 - length))])}\
+                            // {self.line_number}"
                         self.line_number += 1
             return '\n'.join(lines)
 
@@ -52,10 +61,12 @@ class CodeWriter:
             # create a Parser instance for each file
             parser = Parser(file)
             while not parser.EOF:
-                # parse lines until end of file
-                command = parser.parse()
-                if command:
-                    self.__cmd_switch(command)
+                # parse and write lines until end of file
+                try:
+                    command, file = parser.parse()
+                    self.__cmd_switch(command, file)
+                except TypeError:
+                    pass
             parser.close()
 
 #-------------------------------------------------------------------------------
@@ -71,6 +82,7 @@ class CodeWriter:
         ass_str += 'D=A\n'
         ass_str += '@SP\n'
         ass_str += 'M=D\n'
+        ass_str += '// call sys.init 0\n'
         self.__write(ass_str)
 
         # call Sys.init() function as present
@@ -79,13 +91,13 @@ class CodeWriter:
 #-------------------------------------------------------------------------------
 
     # "private" method to route command type
-    def __cmd_switch(self, cmd):
+    def __cmd_switch(self, cmd, file):
         """ route command type based on parser label """
         c_type = cmd[-1]
         if c_type == 'C_PUSH':
-            self.c_push(cmd[0:-1])
+            self.c_push(cmd[0:-1], file)
         elif c_type == 'C_POP':
-            self.c_pop(cmd[0:-1])
+            self.c_pop(cmd[0:-1], file)
         elif c_type == 'C_LABEL':
             self.c_label(cmd[0:-1])
         elif c_type == 'C_GOTO':
@@ -103,7 +115,7 @@ class CodeWriter:
 
 #-------------------------------------------------------------------------------
 
-    def c_push(self, cmd_arr, comment=True):
+    def c_push(self, cmd_arr, file=None, comment=True):
         """ build push assembly string """
 
         # create locals
@@ -166,9 +178,9 @@ class CodeWriter:
             # memory allocation from RAM[16] to RAM[255]
             if 0 <= indx <= 239:
                 # set absolute address index
-                indx += 16
+                addr = self.static_mem_map[file][indx]
                 # put value contained at indx into D
-                ass_str += f'@{indx}\nD=M\n'
+                ass_str += f'@{addr}\nD=M\n'
                 # push to top of stack and write to ouput
                 push_and_write(ass_str)
 
@@ -195,7 +207,7 @@ class CodeWriter:
 
 #-------------------------------------------------------------------------------
 
-    def c_pop(self, cmd_arr, comment=True):
+    def c_pop(self, cmd_arr, file=None, comment=True):
         """ build pop assembly string """
 
         # create locals
@@ -253,10 +265,13 @@ class CodeWriter:
         elif segment == 'static':
             # memory allocation from RAM[16] to RAM[255]
             if 0 <= indx <= 239:
-                # set absolute address index
-                indx += 16
+                # set absolute address
+                addr = 16 + self.static_indx
+                self.static_indx += 1
+                # map memory location
+                self.static_mem_map[file][indx] = addr
                 # put 16+indx address into R13
-                ass_str += f'@{indx}\nD=A\n@R13\nM=D\n'
+                ass_str += f'@{addr}\nD=A\n@R13\nM=D\n'
                 # push to top of stack and write to ouput
                 pop_and_write(ass_str)
 
