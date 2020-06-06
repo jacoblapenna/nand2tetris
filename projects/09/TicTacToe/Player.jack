@@ -1,0 +1,313 @@
+/** clas for a player */
+
+class Player {
+  field int player_num;
+  field String instruction1;
+  field String instruction2;
+  field Array player_map;
+
+  /** constructor function to initialize instance */
+  constructor Player new(int player) {
+
+    var int i;
+
+    let instruction2 = "Press PgDn to make your move";
+
+    if ( player = 1 ) {
+      let player_num = 1;
+      let instruction1 = "Player 1, press -> to move.";
+      }
+
+    if ( player = 2 ) {
+      let player_num = 2;
+      let instruction1 = "Player 2, press -> to move.";
+      }
+
+    // initialize player_map to be empty
+    let player_map = Array.new(8);
+    let i = 0;
+    while (i < 8) {
+      let player_map[i] = 0;
+      let i = i + 1;
+    }
+
+    return this;
+  }
+
+  method void print_instructions() {
+
+    do Output.moveCursor(18, 0);
+    do Output.printString(instruction1);
+    do Output.println();
+    do Output.printString(instruction2);
+    do Output.println();
+
+    return;
+  }
+
+  method void you_won() {
+
+    var String winner_banner1;
+    var String winner_banner2;
+
+    if ( player_num = 1 ) {
+      let winner_banner1 = "Player 1, you won!                   ";
+      let winner_banner2 = "Better luck next time, Player 2!     ";
+    }
+    if ( player_num = 2 ) {
+      let winner_banner1 = "Player 2, you won!                   ";
+      let winner_banner2 = "Better luck next time, Player 1!     ";
+    }
+
+    do Output.moveCursor(18, 0);
+    do Output.printString(winner_banner1);
+    do Output.println();
+    do Output.printString(winner_banner2);
+    do Output.println();
+
+    return;
+  }
+
+  method void show_game_piece(int loc, boolean show) {
+    // the player's respective piece needs to be drawn
+    // whenever the player moves squares
+
+    var int x;
+    var int y;
+
+    if ( loc = 0 ) {
+      let x = 40;
+      let y = 45;
+    }
+    if ( loc = 1 ) {
+      let x = 100;
+      let y = 45;
+    }
+    if ( loc = 2 ) {
+      let x = 160;
+      let y = 45;
+    }
+    if ( loc = 3 ) {
+      let x = 40;
+      let y = 105;
+    }
+    if ( loc = 4 ) {
+      let x = 100;
+      let y = 105;
+    }
+    if ( loc = 5 ) {
+      let x = 160;
+      let y = 105;
+    }
+    if ( loc = 6 ) {
+      let x = 40;
+      let y = 165;
+    }
+    if ( loc = 7 ) {
+      let x = 100;
+      let y = 165;
+    }
+    if ( loc = 8 ) {
+      let x = 160;
+      let y = 165;
+    }
+
+    if ( show ) {
+      do draw_piece(x, y);
+      let player_map[loc] = 1;
+    }
+    if ( ~show ) {
+      do erase_piece(x, y);
+      let player_map[loc] = 0;
+    }
+
+    return;
+  }
+
+  method void draw_piece(int xc, int yc) {
+
+    if ( player_num = 1 ) {
+      do Screen.setColor(true);
+      do Screen.drawLine(xc - 20, yc - 20, xc + 20, yc + 20);
+      do Screen.drawLine(xc - 20, yc + 20, xc + 20, yc - 20);
+    }
+    if ( player_num = 2 ) {
+      do Screen.setColor(true);
+      do Screen.drawCircle(xc, yc, 20);
+      do Screen.setColor(false);
+      do Screen.drawCircle(xc, yc, 19);
+    }
+
+    return;
+  }
+
+  method void erase_piece(int xc, in yc) {
+
+    if ( player_num = 1 ) {
+      do Screen.setColor(false);
+      do Screen.drawLine(xc - 20, yc - 20, xc + 20, yc + 20);
+      do Screen.drawLine(xc - 20, yc + 20, xc + 20, yc - 20);
+    }
+    if ( player_num = 2 ) {
+      do Screen.setColor(false);
+      do Screen.drawCircle(xc, yc, 20);
+    }
+
+    return;
+  }
+
+  method boolean did_you_win() {
+
+    var boolean winner;
+    var int r0;
+    var int r1;
+    var int r2;
+    var int c0;
+    var int c1;
+    var int c2;
+    var int d0;
+    var int d1;
+
+    // default to lose
+    let winner = false;
+
+    // sum each row
+    let r0 = player_map[0] + player_map[1] + player_map[2];
+    let r1 = player_map[3] + player_map[4] + player_map[5];
+    let r2 = player_map[6] + player_map[7] + player_map[8];
+
+    // sum each column
+    let c0 = player_map[0] + player_map[3] + player_map[6];
+    let c1 = player_map[1] + player_map[4] + player_map[7];
+    let c2 = player_map[2] + player_map[5] + player_map[8];
+
+    // sum each diagonal
+    let d0 = player_map[0] + player_map[4] + player_map[8];
+    let d1 = player_map[2] + player_map[4] + player_map[6];
+
+    // check for three in a row
+    if ( r0 = 3 ) {
+      let winner = true;
+    }
+    if ( r1 = 3 ) {
+      let winner = true;
+    }
+    if ( r2 = 3 ) {
+      let winner = true;
+    }
+    if ( c0 = 3 ) {
+      let winner = true;
+    }
+    if ( c1 = 3 ) {
+      let winner = true;
+    }
+    if ( c2 = 3 ) {
+      let winner = true;
+    }
+    if ( d0 = 3 ) {
+      let winner = true;
+    }
+    if ( d1 = 3 ) {
+      let winner = true;
+    }
+
+    return winner;
+  }
+
+  method int find_next_available_square(List board_map, int present_location) {
+
+    var int next_location;
+    var boolean vacant;
+    var int index;
+
+    let vacant = false;
+    let index = present_location;
+
+    while ( ~vacant ) {
+
+      if ( index < 9 ) {
+        let index = index + 1;
+      }
+      if ( index = 9 ) {
+        let index = 0;
+      }
+
+      if ( board_map[index] = 0 ) {
+        let vacant = true;
+        let next_location = index;
+      }
+
+    }
+
+    return next_location;
+  }
+
+  method List your_turn(List board_map, int location) {
+
+    var int present_location;
+    var int next_location;
+    var boolean drawn;
+    var char key;
+    var boolean exit;
+    var int delay;
+
+    let drawn = false;
+    let exit = false;
+    // my computer is faster than my fingers, a small lag on the
+    // control keys causes the piece to move past where I want it
+    // or to skip the next players turn if the control keys are
+    // held a fraction of a second too long
+    let delay = 20000;
+
+    // draw the game piece
+    let present_location = find_next_available_square(board_map, location);
+    do show_game_piece(present_location, true);
+
+    // print the player's instructions
+    do print_instructions();
+
+    // wait for player's input command
+    while ( ~exit ) {
+
+      while ( key = 0 ) {
+        let key = Keyboard.keyPressed();
+      }
+
+      if ( key = 132 ) {
+        // move game piece to next available space
+        let next_location = find_next_available_square(board_map, present_location);
+        do show_game_piece(present_location, false);
+        do show_game_piece(next_location, true);
+        let present_location = next_location;
+      }
+
+      if ( key = 137 ) {
+        // set piece, update board map, and exit
+        let board_map[present_location] = 1;
+        let exit = true;
+      }
+
+      // delay in case of long key press
+      //while ( delay > 0 ) {
+      //  let delay = delay - 1;
+      //}
+
+      let key = Keyboard.keyPressed();
+
+    }
+
+    do Output.printString(""); // this fixes a bug when player 2 wins and I don't know why
+
+    return board_map;
+  }
+
+  /** remove the player */
+  method void dispose() {
+
+    // deallocate stack
+    do Memory.deAlloc(this);
+
+    return;
+  }
+
+}

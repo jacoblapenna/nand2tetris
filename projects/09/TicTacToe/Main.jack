@@ -1,0 +1,15 @@
+/** main instance for tic-tac-toe
+  * creates a new game
+  * starts the game
+  * and cleans memory when done
+*/
+
+class Main {
+  function void main() {
+    var TicTacToe game;
+    let game = TicTacToe.new();
+    do game.run();
+    do game.dispose();
+    return;
+  }
+}

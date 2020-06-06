@@ -1,0 +1,152 @@
+/** class for the game
+* Game board positions:
+*   0|1|2
+*   3|4|5
+*   6|7|8
+*
+*/
+
+
+class TicTacToe {
+
+  /** private variables */
+  field Array master_board_map;
+  field Player player1;
+  field Player player2;
+
+  /** constructor function to initialize instance */
+  constructor TicTacToe new() {
+
+    // initialize variables
+    var int i;
+
+    // initialize master_board_map to be empty
+    let master_board_map = Array.new(8);
+    let i = 0;
+    while (i < 8) {
+      let master_board_map[i] = 0;
+      let i = i + 1;
+    }
+
+    // draw the empty game board
+    // print title
+    do Output.printString("       Tic-Tac-Toe");
+    do Output.println();
+    // draw board
+    do Screen.drawLine(10, 75, 190, 75);
+    do Screen.drawLine(10, 135, 190, 135);
+    do Screen.drawLine(70, 15, 70, 195);
+    do Screen.drawLine(130, 15, 130, 195);
+    // instantiate each player
+    let player1 = Player.new(1);
+    let player2 = Player.new(2);
+
+    return this;
+  }
+
+  method boolean check_for_draw(List board_map) {
+
+    var int board_sum;
+    var int index;
+
+    let board_sum = 0;
+    let index = 0;
+
+    while ( index < 9 ) {
+     let board_sum = board_sum + board_map[index];
+     let index = index + 1;
+    }
+
+    if ( board_sum = 9 ) {
+     return true;
+    }
+
+    return false;
+  }
+
+  method void notify_of_draw() {
+
+    var String draw_banner1;
+    var String draw_banner2;
+
+    let draw_banner1 = "The game was a draw!               ";
+    let draw_banner2 = "Better luck next time!             ";
+
+    do Output.moveCursor(18, 0);
+    do Output.printString(draw_banner1);
+    do Output.println();
+    do Output.printString(draw_banner2);
+    do Output.println();
+
+    return;
+  }
+
+  /** start an instance of the game */
+  method void run() {
+
+    var boolean winner;
+    var boolean draw;
+    var boolean exit;
+    var int player;
+
+    let winner = false;
+    let draw = false;
+    let exit = false;
+    let player = 1;
+
+    // while loop that switches turns and checks for winner each play
+    while ( ~exit ) {
+
+      if ( player = 1 & (~exit) ) {
+        let master_board_map = player1.your_turn(master_board_map, 3);
+        let winner = player1.did_you_win();
+        let draw = check_for_draw(master_board_map);
+        if ( winner | draw ) {
+          if ( winner & draw | winner) {
+            do player1.you_won();
+          }
+          if ( draw ) {
+            do notify_of_draw();
+          }
+          let exit = true;
+        }
+        let player = 2;
+      }
+
+      if ( player = 2 & (~exit) ) {
+        let master_board_map = player2.your_turn(master_board_map, 3);
+        let winner = player2.did_you_win();
+        let draw = check_for_draw(master_board_map);
+        if ( winner | draw ) {
+          if ( (winner & draw) | winner) {
+            do player2.you_won();
+          }
+          if ( draw ) {
+            do notify_of_draw();
+          }
+          let exit = true;
+        }
+        let player = 1;
+      }
+
+    }
+
+    return;
+  }
+
+  /** cleanup after an instance of game has ended */
+  method void dispose() {
+
+    // dispose of player one
+    do player1.dispose();
+
+    // dispose of player two
+    do player2.dispose();
+
+    // deallocate stack
+    do Memory.deAlloc(this);
+
+    return;
+  }
+
+}
