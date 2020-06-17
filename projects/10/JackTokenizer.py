@@ -2,6 +2,7 @@
 
 from JackKeywords import jack_keywords_list
 from JackSymbols import jack_symbols_list
+from JackToken import JackToken
 import re
 import os
 
@@ -13,92 +14,82 @@ class JackTokenizer:
             os.makedirs('Output')
         self.output_file = f"Output/{input_file.split('.')[0]}T.xml"
         self.output_stream = open(self.output_file, 'w')
-        self.builtins_regex = self.get_builtins_regex()
+        self.symbol_regex = fr"{'|'.join([re.escape(char) for char in jack_symbols_list])}"
+
+        self.output_stream.write('<tokens>\n')
 
         for line_number, line in enumerate(self.input_stream):
             # get rid of whitespace and comments
             code = re.split(r'//|/\*', line)[0].strip()
             # if code is present, process it
-            if code:
+            if code and code[0] != '*':
                 self.get_tokens(code)
+                tokens = self.get_tokens(code)
+                for token in tokens:
+                    output_line = self.process_token(token)
+                    self.output_stream.write(output_line + '\n')
 
-    """
-    break up line of code into individual tokens
-    identify tokens
-    wrap each token in corresponding xml element
-    send token and element tags a a new line in output file
-    """
+        self.output_stream.write('</tokens>')
 
-    def get_builtins_regex(self):
-        """ build regular expression for tokenizing """
-
-        regex = r''
-        regex += fr"{'|'.join([re.escape(symbol) for symbol in jack_symbols_list])}"
-        for keyword in jack_keywords_list:
-            regex += fr"|{keyword}"
-
-        return regex
+        self.output_stream.close()
+        self.input_stream.close()
 
     def get_tokens(self, code):
-        """
-        parse individual tokens from a string of code
+        """ parse individual tokens from a string of code """
 
-        First: each regular expression must be 'custom' for the code string to
-        be parsed, as it will contain potentially custom identifiers in
-        addition to standard keywords.
+        # create dict to store tokens and their type
+        token_list = [] # list of JackToken objects
 
-        Second: use this constructed regular expression to split the code
-        string into a lit of tokens.
-        """
+        def check_for_int(token):
+            # helper function to check if token is an integer
+            try:
+                int(token)
+                return True
+            except ValueError:
+                return False
 
-        # create regex of standard keywords and symbols
-        builtins_pattern = re.compile(self.builtins_regex, flags=re.I | re.X)
+        # detect strings
+        strings = re.findall(r'["\']([^"\']+)["\']', code)
+        # remove whitespace that is not within a string and flatten result
+        sub_tokens = sum([[t] if t in strings else t.split() for t in re.split(r'["\']', code)], [])
+        # separate by symbols, flatten result, and lose empty tokens
+        tokens = list(filter(None, sum([[t] if t in strings else re.split(fr'({self.symbol_regex})', t) for t in sub_tokens], [])))
 
-        # get all non-keywords (i.e. identifiers, constants, and strings)
-        other_tokens_present = []
-        for token in re.split(builtins_pattern, code):
-            token = token.strip()
-            if token:
-                if (token[0] == '"'):
-                    other_tokens_present.append(re.escape(token.strip('"')))
-                elif (token[0] == "'"):
-                    other_tokens_present.append(re.escape(token.strip("'")))
-                elif (' ' in token):
-                    for sub_token in token.split(' '):
-                        other_tokens_present.append(sub_token.strip())
-                else:
-                    other_tokens_present.append(token)
+        # get token types
+        for token in tokens:
+            if token in strings:
+                type = 'string'
+            elif token in jack_symbols_list:
+                type = 'symbol'
+            elif token in jack_keywords_list:
+                type = 'keyword'
+            elif check_for_int(token):
+                type = 'integer'
+            else:
+                type = 'identifier'
+            # put the token in the token_list
+            token_list.append(JackToken(token, type))
 
-        # build custom regex pattern
-        regex = self.builtins_regex
-        if other_tokens_present:
-            for token in other_tokens_present:
-                regex += fr"|{token}"
-        pattern = re.compile(regex, flags=re.I | re.X) #### THIS IS IGNORING WHITESPACE SO STRINGS DO NOT GET FOUND!!!!
+        return token_list
 
-        return re.findall(regex, code)
+    def process_token(self, token):
+        """ prepares token for entry into output stream """
 
-    def get_token_type(self, token):
-        """ detects and returns token's lexical element type """
-
-        if (token in jack_keywords_list):
-            return 'KEYWORD'
-        elif (token in jack_symbols_list):
-            return 'SYMBOL'
-        elif ():
-            """
-            floats can occur:
-            - after their type, which is preceded by the var keyword
-            - after the '=' symbol in an expression declared by the let keyword
-            - after a number of symbols within expressions
-            """
-            return 'INT_CONST'
-        elif (): # combo of letter numbers and underscore not starting with number
-            """
-            can be var, class, or subroutine name
-            - var names must be declared at beginning of subroutine body, always
-            follow their type, which is preceded by the var keyword
-            - class names always follow the class keyword
-            - subroutine names always follow their return type or the void
-            keyword, which is always preceded by the subroutine's type keyword
-            """
+        if token.type == 'keyword': # check for keyword
+            return f'<keyword> {token.value} </keyword>'
+        elif token.type == 'symbol': # check for symbol
+            """ start xml formatting requirements for symbols """
+            if token.value == '<':
+                return f'<symbol> &lt; </symbol>'
+            elif token.value == '>':
+                return f'<symbol> &gt; </symbol>'
+            elif token.value == '&':
+                return f'<symbol> &amp; </symbol>'
+            """ end xml formatting requirements for symbols """
+            return f'<symbol> {token.value} </symbol>'
+        elif token.type == 'integer': # check for integer
+            return f'<integerConstant> {token.value} </integerConstant>'
+        elif token.type == 'identifier': # check for indentifier
+            return f'<identifier> {token.value} </identifier>'
+        elif token.type == 'string': # it's a string
+            return f'<stringConstant> {token.value} </stringConstant>'

@@ -30,19 +30,10 @@ def example_usage(error_str):
 def tokenize(file_list):
     """ create a JackTokenizer instance for each file to  be compiled """
 
-    global tokens
-
     for jack_file in file_list:
-        tokens[jack_file] = JackTokenizer(jack_file)
-
-def compile(tokens):
-    """ operate on each token with CompilationEngine """
-
-    pass
+        JackTokenizer(jack_file)
 
 if __name__ == '__main__':
-
-    tokens = {}
 
     """ parse command line arguments """
     try:
@@ -58,7 +49,18 @@ if __name__ == '__main__':
         if input in os.listdir():
             jack_files = [input]
         else:
-            example_usage('file not found')
+            dir_list = input.split('/')
+            if [dir for dir in dir_list[0:-1] if dir.strip()]:
+                try:
+                    os.chdir('/'.join(dir_list[0:-1]))
+                    if dir_list[-1] in os.listdir():
+                        jack_files = [dir_list[-1]]
+                    if not jack_files:
+                        example_usage('no vm files in specified directory')
+                except FileNotFoundError:
+                    example_usage('no such directory')
+            else:
+                example_usage('file not found')
     else:
         if input in os.getcwd():
             jack_files = list_all_jack_files(os.getcwd())
