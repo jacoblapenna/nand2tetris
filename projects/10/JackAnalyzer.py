@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from JackTokenizer import JackTokenizer
-from CompilationEngine import CompilationEngine
 import sys
 import os
 

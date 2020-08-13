@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from CompilationEngine import CompilationEngine
 from JackKeywords import jack_keywords_list
 from JackSymbols import jack_symbols_list
 from JackToken import JackToken
@@ -10,28 +11,37 @@ class JackTokenizer:
 
     def __init__(self, input_file):
         self.input_stream = open(input_file, 'r')
-        if ('Output' not in os.listdir()):
-            os.makedirs('Output')
-        self.output_file = f"Output/{input_file.split('.')[0]}T.xml"
-        self.output_stream = open(self.output_file, 'w')
         self.symbol_regex = fr"{'|'.join([re.escape(char) for char in jack_symbols_list])}"
+        self.tokens = []
 
-        self.output_stream.write('<tokens>\n')
+        """ output stream only needed for stage 1 """
+        # if ('Output' not in os.listdir()):
+        #     os.makedirs('Output')
+        # self.output_file = f"Output/{input_file.split('.')[0]}T.xml"
+        # self.output_stream = open(self.output_file, 'w')
+
+        """ <tokens> xml only needed for stage 1 """
+        # self.output_stream.write('<tokens>\n')
 
         for line_number, line in enumerate(self.input_stream):
             # get rid of whitespace and comments
             code = re.split(r'//|/\*', line)[0].strip()
             # if code is present, process it
             if code and code[0] != '*':
-                self.get_tokens(code)
                 tokens = self.get_tokens(code)
                 for token in tokens:
-                    output_line = self.process_token(token)
-                    self.output_stream.write(output_line + '\n')
+                    self.tokens.append(token)
+                    """ output only needed for stage 1 """
+                    # output_line = self.process_token(token)
+                    # self.output_stream.write(output_line + '\n')
 
-        self.output_stream.write('</tokens>')
+        CompilationEngine(self.tokens, input_file)
 
-        self.output_stream.close()
+        """ <tokens> xml only needed for stage 1 """
+        # self.output_stream.write('</tokens>')
+
+        """ output not a file for stage 2 """
+        # self.output_stream.close()
         self.input_stream.close()
 
     def get_tokens(self, code):
@@ -72,6 +82,9 @@ class JackTokenizer:
 
         return token_list
 
+    # this function is only needed for stage 1 of the project to
+    # check tokenization, comment out call for final stage 2 and port
+    # tokens to CompilationENgine instead
     def process_token(self, token):
         """ prepares token for entry into output stream """
 
