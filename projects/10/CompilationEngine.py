@@ -13,6 +13,8 @@ class CompilationEngine:
     at the start of function compilation, and the closing tag is applied
     at the end of function compilation only after all the internal function
     code has been compiled from within the function.
+
+    Figure 10.5 is of great help!
     """
 
     def __init__(self, tokens, input_file):
@@ -29,6 +31,7 @@ class CompilationEngine:
     """---------------------------------------------------------------------"""
 
     def get_next_token(self, peak_at_future_token=False):
+        """ grab the next token from the tokenizer """
 
         if self.token_cnt <= self.token_cnt_limit:
             token_indx = self.token_cnt
@@ -49,9 +52,7 @@ class CompilationEngine:
     """---------------------------------------------------------------------"""
 
     def write_token(self, token):
-        """
-        handles each token
-        """
+        """ handles each token for output to XML file """
 
         type = token.type
         value = token.value
@@ -114,24 +115,27 @@ class CompilationEngine:
     """---------------------------------------------------------------------"""
 
     def compile_class_var_dec(self, token):
-
-        exit_var_dec = False
+        """ copile class variable declaration """
 
         self.output('<classVarDec>')
 
-        self.write_token(token)
-
-        while not exit_var_dec:
-            token = self.get_next_token()
+        # iterate through token
+        while True:
             if token.value == ';':
-                exit_var_dec = True
-            self.write_token(token)
+                # each declaration ends on a semi-colon
+                self.write_token(token)
+                break
+            else:
+                # otherwise, output token as normal
+                self.write_token(token)
+                token = self.get_next_token()
 
         self.output('</classVarDec>')
 
     """---------------------------------------------------------------------"""
 
     def compile_subroutine(self, token):
+        """ compiles a subroutine declaration """
 
         exit_subroutine_dec = False
 
@@ -169,58 +173,57 @@ class CompilationEngine:
     """---------------------------------------------------------------------"""
 
     def compile_parameter_list(self):
+        """ compiles function parameter requirements """
 
-        self.output('<parameterList>')
+        self.output('<parameterList>') # open parameter section
 
-        token = self.get_next_token()
+        token = self.get_next_token() # ger first param token
 
-        if token.value == ')':
-            exit_param_list = True
-        else:
-            exit_param_list = False
+        while token.value != ')':
+            # iterate and output tokens until end of parameter list
             self.write_token(token)
-
-        while not exit_param_list:
             token = self.get_next_token()
-            if token.value == ')':
-                exit_param_list = True
-            else:
-                self.write_token(token)
 
-        self.output('</parameterList>')
+        self.output('</parameterList>') # close parameter section
 
-        self.write_token(token)
+        self.write_token(token) # ouput closing parenthases
 
     """---------------------------------------------------------------------"""
 
     def compile_var_dec(self, token):
+        """ compiles variable declarations """
 
-        self.output('<varDec>')
+        # same as class variable declaration but with different XML tags
 
+        self.output('<varDec>') # open variable declarions section
+
+        # iterate through token
         while True:
             if token.value == ';':
+                # each declaration ends on a semi-colon
                 self.write_token(token)
                 break
             else:
+                # otherwise, output token as normal
                 self.write_token(token)
                 token = self.get_next_token()
 
-        self.output('</varDec>')
+        self.output('</varDec>') # close variable declaration section
 
     """---------------------------------------------------------------------"""
 
     def compile_statements(self, token=False):
-        """ everything you need is in figure 10.5 of the book """
+        """ compiles statements """
 
-        # open statements
-        self.output('<statements>')
+        self.output('<statements>') # open statements
 
-        # if no token is passed, get next one
+        # if no token is passed by caller, get next one
         if not token:
             token = self.get_next_token()
 
         # if token is a statement keyword
         while token.value in ['let', 'if', 'while', 'do', 'return']:
+            # route to respective compiling function
             if token.value == 'let':
                 self.compile_let(token)
             elif token.value == 'if':
@@ -233,123 +236,148 @@ class CompilationEngine:
                 self.compile_return(token)
             token = self.get_next_token()
 
-        self.output('</statements>')
+        self.output('</statements>') # close statements
 
-        return token;
+        return token; # caller is expecting a return token
 
-    """---------------------------------------------------------------------         WORK ON THIS ONE TO MAKE CLEANER """
+    """---------------------------------------------------------------------"""
 
     def compile_let(self, token):
+        """ compiles a let statement """
 
-        exit_let_statement = False
+        self.output('<letStatement>') # open let statement
 
-        self.output('<letStatement>')
-
-        self.write_token(token)
-
-        while not exit_let_statement:
-            token = self.get_next_token()
+        while True:
+            # iterate through let statement tokens
+            if token.value == ';':
+                # end on semi-colon
+                self.write_token(token)
+                break
             if token.value in ['=', '[']:
+                # array index or variable set to expression
+                # array index can be expression itself
                 self.write_token(token)
                 token = self.compile_expression()
+            else:
+                # otherwise, output token within let statement tags
+                self.write_token(token)
+                token = self.get_next_token()
 
-            self.write_token(token)
-
-            if token.value == ';':
-                exit_let_statement = True
-
-        self.output('</letStatement>')
+        self.output('</letStatement>') # close let statement
 
     """---------------------------------------------------------------------"""
 
     def compile_if(self, token):
+        """ compiles an if or if/else statement """
 
-        self.output('<ifStatement>')
+        self.output('<ifStatement>') # open if statement
 
+        # itereate through statement tokens
         while True:
             if token.value == '(':
+                # parenthases start expressions
                 self.write_token(token)
                 token = self.compile_expression()
             elif token.value == '{':
+                # left braces start statements
                 self.write_token(token)
                 token = self.compile_statements()
             elif token.value == '}':
+                # right braces end statments
                 self.write_token(token)
                 future_token = self.get_next_token(peak_at_future_token=True)
+                # determine if statement is if/else or just if
                 if future_token.value == "else":
                     token = self.get_next_token()
                 else:
-                    break
+                    break # break if no more to if/else
             else:
+                # otherwise output token
                 self.write_token(token)
                 token = self.get_next_token()
 
-        self.output('</ifStatement>')
+        self.output('</ifStatement>') # close if statement
 
     """---------------------------------------------------------------------"""
 
     def compile_while(self, token):
+        """ compile while statement """
 
-        self.output('<whileStatement>')
+        self.output('<whileStatement>') # open while statement
 
+        # itereate through statement's tokens
         while True:
-            #self.write_token(token)
             if token.value == '(':
+                # left parent starts expressions
                 self.write_token(token)
                 token = self.compile_expression()
             elif token.value == '{':
+                # left brace starts statements
                 self.write_token(token)
                 token = self.compile_statements()
             elif token.value == '}':
+                # right brace ends statements, no need to detect else
                 self.write_token(token)
                 break
             else:
+                # otherwise, output token
                 self.write_token(token)
                 token = self.get_next_token()
 
-        self.output('</whileStatement>')
+        self.output('</whileStatement>') # close while statement
 
     """---------------------------------------------------------------------"""
 
     def compile_do(self, token):
+        """ compile do statement """
 
-        self.output('<doStatement>')
+        self.output('<doStatement>') # open do statement
 
+        # itereate through statement's tokens
         while True:
             if token.value == '(':
+                # left parenthases start expressions
                 self.write_token(token)
                 token = self.compile_expression_list()
             elif token.value == ';':
+                # ends on semi-colon
                 self.write_token(token)
                 break
             else:
+                # otherwise, output token
                 self.write_token(token)
                 token = self.get_next_token()
 
-        self.output('</doStatement>')
+        self.output('</doStatement>') # close do statement
 
     """---------------------------------------------------------------------"""
 
     def compile_return(self, token):
+        """ compile return """
 
-        self.output('<returnStatement>')
+        self.output('<returnStatement>') # open return statement
 
         while True:
             if token.value == ';':
+                # end on semi-colon
                 self.write_token(token)
                 break
             elif token.value != "return":
+                # unless trying to return an expression
                 token = self.compile_expression(token)
             else:
+                # otherwise output token as normal
                 self.write_token(token)
                 token = self.get_next_token()
 
-        self.output('</returnStatement>')
+        self.output('</returnStatement>') # close return statement
 
     """---------------------------------------------------------------------"""
 
     def compile_expression(self, token=False):
+        """ compile expressions """
 
+        # define tokens outside terms and within expressions
         writeable_tokens = ['+', '-', '*', '/', '&', '|', '<', '>', '~', '=']
 
         self.output('<expression>') # open expression
@@ -358,6 +386,7 @@ class CompilationEngine:
         if not token:
             token = self.get_next_token()
 
+        # if token does not indicate closing the expression, itereate
         while not token.value in [')', ']', ';', ',']:
             token = self.compile_term(token)
             if token.value in writeable_tokens:
@@ -366,68 +395,89 @@ class CompilationEngine:
 
         self.output('</expression>') # close expression
 
-        #self.output(f"Returning from compile_expression() with: {token.value}") #DEBUG
-        return token
+        return token # caller is expecting a token back
 
     """---------------------------------------------------------------------"""
 
     def compile_expression_list(self, token=False):
+        """ compile a list of expressions """
 
-        self.output('<expressionList>')
+        self.output('<expressionList>') # open expression list
 
         # if no token is passed, get next one
         if not token:
             token = self.get_next_token()
 
+        # iterate through tokens until list is closed
         while token.value != ')':
+            # list is comma seperated
             if token.value == ',':
                 self.write_token(token)
                 token = self.get_next_token()
+            # items in list are expressions
             token = self.compile_expression(token)
 
-        self.output('</expressionList>')
+        self.output('</expressionList>') # close expression list
 
-        #self.output(f"Returning from compile_expression_list() with: {token.value}") #DEBUG
-        return token
+        return token # caller is expecting a token back
 
     """---------------------------------------------------------------------"""
 
     def compile_term(self, token):
+        """ compile a term within an expression """
 
+        # define symbols that indicate end of term
         returnable_symbols = [')', ']', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '~', '=']
+        # keep track of what's been compiled so far
         previous_token = JackToken(None, None)
 
-        self.output('<term>')
+        self.output('<term>') # open term
 
+        # itereate through token within term
         while True:
+            # if token indicated end of term
             if token.value in returnable_symbols:
+                # detect whether it is unary or not
                 if not previous_token.value:
-                    # token is unary operator
+                    # token is unary operator, write before returning
                     self.write_token(token)
                     token = self.compile_term(self.get_next_token())
                     break
                 else:
                     # token is binary operator (not necessarily bitwise)
+                    # return token to caller to write in expression as
+                    # term seperator
                     break
             elif token.value == '(':
+                # either a subroutine was called or there is some
+                # parenthetical math operations going one
                 if previous_token.type == "identifier":
+                    # if an identifier preceeds the token, a subroutine
+                    # was called, in which case an expression list follows
                     self.write_token(token)
                     token = self.compile_expression_list()
                     self.write_token(token)
                 else:
+                    # otherwise, parenthesis are present to define order
+                    # of operations within maths, which means it is enclosing
+                    # an expression rather than expression list
                     self.write_token(token)
                     token = self.compile_expression()
                     self.write_token(token)
             elif previous_token.type == "identifier" and token.value == '[':
+                # if term is composed of an array access, compile expression
+                # within indexing brackets, as index can itself be an
+                # expression
                 self.write_token(token)
                 token = self.compile_expression()
                 self.write_token(token)
             else:
+                # otherwise, output token as nromal
                 self.write_token(token)
+            # keep track of last compiled token
             previous_token = token
-            token = self.get_next_token()
+            token = self.get_next_token() # continue with next token
 
-        self.output('</term>')
+        self.output('</term>') # close term
 
-        #self.output(f"Returning from compile_term() with: {token.value}") #DEBUG
-        return token
+        return token # caller is expecting a token back
