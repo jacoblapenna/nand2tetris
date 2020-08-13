@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+from JackToken import JackToken
 from JackSymbols import jack_symbols_list
 
 class CompilationEngine:
@@ -236,7 +237,7 @@ class CompilationEngine:
 
         return token;
 
-    """---------------------------------------------------------------------"""
+    """---------------------------------------------------------------------         WORK ON THIS ONE TO MAKE CLEANER """
 
     def compile_let(self, token):
 
@@ -263,34 +264,25 @@ class CompilationEngine:
 
     def compile_if(self, token):
 
-        left_bracket_cnt = 0
-        right_bracket_cnt = 0
-        exit_if_statement = False
-
         self.output('<ifStatement>')
 
-        self.write_token(token)
-
-        while not exit_if_statement:
-            token = self.get_next_token()
+        while True:
             if token.value == '(':
                 self.write_token(token)
                 token = self.compile_expression()
             elif token.value == '{':
-                left_bracket_cnt += 1
                 self.write_token(token)
                 token = self.compile_statements()
             elif token.value == '}':
-                right_bracket_cnt += 1
                 self.write_token(token)
+                future_token = self.get_next_token(peak_at_future_token=True)
+                if future_token.value == "else":
+                    token = self.get_next_token()
+                else:
+                    break
             else:
                 self.write_token(token)
-
-            bracket_diff = left_bracket_cnt - right_bracket_cnt
-            if not bracket_diff and left_bracket_cnt > 0:
-                future_token = get_next_token(peak_at_future_token=True)
-                if future_token.value != 'else':
-                    exit_if_statement = True
+                token = self.get_next_token()
 
         self.output('</ifStatement>')
 
@@ -347,7 +339,7 @@ class CompilationEngine:
                 self.write_token(token)
                 break
             elif token.value != "return":
-                token = compile_expression(token)
+                token = self.compile_expression(token)
             else:
                 self.write_token(token)
                 token = self.get_next_token()
@@ -358,7 +350,7 @@ class CompilationEngine:
 
     def compile_expression(self, token=False):
 
-        writeable_tokens = ['+', '-', '*', '/', '&', '|', '<', '>', '~']
+        writeable_tokens = ['+', '-', '*', '/', '&', '|', '<', '>', '~', '=']
 
         self.output('<expression>') # open expression
 
@@ -366,7 +358,7 @@ class CompilationEngine:
         if not token:
             token = self.get_next_token()
 
-        while not token.value in [')', ']', ';']:
+        while not token.value in [')', ']', ';', ',']:
             token = self.compile_term(token)
             if token.value in writeable_tokens:
                 self.write_token(token)
@@ -390,6 +382,7 @@ class CompilationEngine:
         while token.value != ')':
             if token.value == ',':
                 self.write_token(token)
+                token = self.get_next_token()
             token = self.compile_expression(token)
 
         self.output('</expressionList>')
@@ -401,23 +394,30 @@ class CompilationEngine:
 
     def compile_term(self, token):
 
-        returnable_symbols = [')', ']', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '~']
+        returnable_symbols = [')', ']', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '~', '=']
+        previous_token = JackToken(None, None)
 
         self.output('<term>')
 
-        self.write_token(token)
-
-        previous_token = token
-
         while True:
-            token = self.get_next_token()
             if token.value in returnable_symbols:
-                #self.output(f'breaking with: {token.value}')
-                break
-            elif previous_token.type == "identifier" and token.value == '(':
-                self.write_token(token)
-                token = self.compile_expression_list()
-                self.write_token(token)
+                if not previous_token.value:
+                    # token is unary operator
+                    self.write_token(token)
+                    token = self.compile_term(self.get_next_token())
+                    break
+                else:
+                    # token is binary operator (not necessarily bitwise)
+                    break
+            elif token.value == '(':
+                if previous_token.type == "identifier":
+                    self.write_token(token)
+                    token = self.compile_expression_list()
+                    self.write_token(token)
+                else:
+                    self.write_token(token)
+                    token = self.compile_expression()
+                    self.write_token(token)
             elif previous_token.type == "identifier" and token.value == '[':
                 self.write_token(token)
                 token = self.compile_expression()
@@ -425,6 +425,7 @@ class CompilationEngine:
             else:
                 self.write_token(token)
             previous_token = token
+            token = self.get_next_token()
 
         self.output('</term>')
 
